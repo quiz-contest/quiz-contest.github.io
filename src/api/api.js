@@ -1,6 +1,7 @@
 
 export const settings = {
     host: ''
+  //  host: ''
 };
 
 async function request(url, options) {
@@ -14,19 +15,22 @@ async function request(url, options) {
 
         try {
             return await response.json();
-        } catch (err) {
+        } catch (error) {
             return response;
         }
-    } catch (err) {
-        //alert(er.message);
-        throw err;
+    } catch (error) {
+        alert(error.message);
+        throw error;
     }
 }
 
 function createOptions(method = 'get', data) {
     const result = {
         method,
-        headers: {}
+        headers: {
+            'X-Parse-Application-Id': 'Y8VgGqD1UmrEJlyGce63neUXKd7ZWsvpEJr8uayC',
+            'X-Parse-REST-API-Key': 'S7e9G7EaOGEvfIdFgcdoePYD87T3uJ5LKqUUKetl'
+        }
     };
 
     if (data) {
@@ -36,7 +40,7 @@ function createOptions(method = 'get', data) {
 
     const token = sessionStorage.getItem('authToken');
     if (token != null) {
-        result.headers['X-Authorization'] = token;
+        result.headers['X-Parse-Session-Token'] = token;
     }
 
     return result;
@@ -58,30 +62,30 @@ export async function del(url) {
     return request(url, createOptions('delete'));
 }
 
-export async function login(email, password) {
-    const response = await post(settings.host + '/users/login', { email, password });
+export async function login(username, password) {
+    const response = await post(settings.host + '/login', { username, password });
 
-    sessionStorage.setItem('authToken', response.accessToken);
-    sessionStorage.setItem('username', response.username);
-    sessionStorage.setItem('userId', response._id);
+    sessionStorage.setItem('authToken', response.sessionToken);
+    sessionStorage.setItem('userId', response.objectId);
+    sessionStorage.setItem('username', username);
 
     return response;
 }
 
 export async function register(email, username, password) {
-    const response = await post(settings.host + '/users/register', { email, username, password });
+    const response = await post(settings.host + '/users', { email, username, password });
 
-    sessionStorage.setItem('authToken', response.accessToken);
-    sessionStorage.setItem('userId', response._id);
-    sessionStorage.setItem('username', response.username);
-    
+    sessionStorage.setItem('authToken', response.sessionToken);
+    sessionStorage.setItem('userId', response.objectId);
+    sessionStorage.setItem('username', username);
+
     return response;
 }
 
 export async function logout() {
-    
-    const response = await get(settings.host + '/users/logout');
+
+    const response = await post(settings.host + '/logout', {});
     sessionStorage.removeItem('authToken');
-    sessionStorage.removeItem('username');
     sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('username');
 }
