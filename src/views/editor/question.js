@@ -1,78 +1,82 @@
 import { html, render } from '../../lib.js'
+import { createAnswersList } from './answer.js'
 
 export function createQuestion(question, index, edit) {
 
     const element = document.createElement('article');
     element.className = "editor-question";
+    showView();
 
-    if (edit) {
-        render(editorTemplate(question, index), element);
-    } else {
-        render(viewTemplate(question, index), element);
+    function onEdit() {
+        showEditor();
     }
+    async function onDelete() {
+        const confirmed = confirm("Are you sure to delete this question?");
+        if (confirmed) {
+            element.remove();
+        }
+    }
+
+    async function onSave() {
+        const formData = new FormData(element.querySelector('form'));
+        const data = [...formData.entries()].reduce((a, [k, v]) => Object.assign(a, { [k]: v }), {});
+        console.log(data);
+    }
+
+    function onCancel() {
+        showView();
+    }
+
+    function showView() {
+        render(viewTemplate(question, index, onEdit, onDelete), element)
+    }
+
+    function showEditor() {
+        render(editorTemplate(question, index, onSave, onCancel), element);
+
+    }
+
     return element;
 }
 
 //            <div class="loading-overlay working"></div>
 
-
-const editorTemplate = (data, index) => html`
+const editorTemplate = (data, index, onSave, onCancel) => html`
 
             <div class="layout">
                 <div class="question-control">
-                    <button class="input submit action"><i class="fas fa-check-double"></i>
+                    <button @click=${onSave} class="input submit action"><i class="fas fa-check-double"></i>
                         Save</button>
-                    <button class="input submit action"><i class="fas fa-times"></i> Cancel</button>
+                    <button @click=${onCancel} class="input submit action"><i class="fas fa-times"></i> Cancel</button>
                 </div>
                 <h3>Question ${index}</h3>
             </div>
             <form>
                 <textarea class="input editor-input editor-text" name="text" placeholder="Enter question"
                     .value=${data.text}></textarea>
-                ${data.answers.map((a, i) => radioEditTemplate(index, i, a, data.correctIndex == i))}
-                <div class="editor-input">
-                    <button class="input submit action">
-                        <i class="fas fa-plus-circle"></i>
-                        Add answer
-                    </button>
-                </div>
+            
+                ${createAnswersList(data.answers, index, data.correctIndex)}
             </form>
 `;
 
-const radioEditTemplate = (questionIndex, index, value, checked) => html`
-    <div class="editor-input">
-    
-        <label class="radio">
-            <input class="input" type="radio" name=${`question-${questionIndex}`} value=${index} ?checked=${checked} />
-            <i class="fas fa-check-circle"></i>
-        </label>
-    
-        <input class="input" type="text" name=${`answer-${index}`} .value=${value} />
-        <button class="input submit action"><i class="fas fa-trash-alt"></i></button>
-    </div>
-`;
-
-
-const viewTemplate = (data, index) => html`
+const viewTemplate = (data, index, onEdit, onDelete) => html`
             <div class="layout">
                 <div class="question-control">
-                    <button class="input submit action"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="input submit action"><i class="fas fa-trash-alt"></i> Delete</button>
+                    <button @click=${onEdit} class="input submit action"><i class="fas fa-edit"></i> Edit</button>
+                    <button @click=${onDelete} class="input submit action"><i class="fas fa-trash-alt"></i> Delete</button>
                 </div>
                 <h3>Question ${index}</h3>
             </div>
             <div>
-            <p class="editor-input">${data.text}</p>
-
-            ${data.answers.map((a,i) => radioViewTemplate(a, data.correctIndex == i))}
-
+                <p class="editor-input">${data.text}</p>
+                ${data.answers.map((q, i) => radioViewTemplate(q, data.correctIndex == i))}
             </div>
 `;
 
-const radioViewTemplate = (value, checked) => html`
+const radioViewTemplate = (value, isChecked) => html`
 <div class="editor-input">
     <label class="radio">
-        <input class="input" type="radio" disabled ?checked=${checked}/>
+        <input class="input" type="radio" disabled ?checked=${isChecked} />
         <i class="fas fa-check-circle"></i>
     </label>
     <span> ${value}</span>
