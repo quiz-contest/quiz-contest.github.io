@@ -3,7 +3,6 @@ import { html, render } from '../../lib.js'
 
 const radioEditTemplate = (questionIndex, index, value, checked) => html`
     <div class="editor-input">
-    
         <label class="radio">
             <input class="input" type="radio" name=${`question-${questionIndex}`} value=${index} ?checked=${checked} />
             <i class="fas fa-check-circle"></i>
@@ -13,30 +12,41 @@ const radioEditTemplate = (questionIndex, index, value, checked) => html`
     </div>
 `;
 
-export function createAnswersList(answers, questionIndex, correctIndex) {
-    const current = answers.slice();
+export function createAnswersList(data, questionIndex) {
+    const answers = data.answers;
     const element = document.createElement('div');
-    element.addEventListener('click', onDelete)
+    element.addEventListener('click', onDelete);
+    element.addEventListener('change', onChange)
     update();
-
 
     return element;
 
     function update() {
         render(html`
-            ${current.map((a, i) => radioEditTemplate(questionIndex, i, a, correctIndex == i))}
+            ${answers.map((a, i) => radioEditTemplate(questionIndex, i, a, data.correctIndex == i))}
+            
             <div class="editor-input">
                 <button @click=${addAnswer} class="input submit action">
                     <i class="fas fa-plus-circle"></i>
                     Add answer
                 </button>
             </div>`,
-            element);
+            element
+        );
+    }
+
+    function onChange(ev) {
+        if (ev.target.getAttribute('type') == 'text') {
+            const index = Number(ev.target.name.split("-")[1]);
+            answers[index] = ev.target.value || '';
+        } else {
+            data.correctIndex = Number(e.target.value)
+        }
     }
 
     function addAnswer(ev) {
         ev.preventDefault();
-        current.push('');
+        answers.push('');
         update();
     }
 
@@ -47,10 +57,9 @@ export function createAnswersList(answers, questionIndex, correctIndex) {
             target = target.parentNode;
         }
         const index = target.dataset.index;
-        if (index) {
-            current.splice(index,1);
+        if (index != undefined) {
+            answers.splice(index, 1);
             update();
-
         }
     }
 }

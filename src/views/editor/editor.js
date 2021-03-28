@@ -1,5 +1,5 @@
-import { createQuestion } from './question.js';
 import { html } from '../../lib.js'
+import {createList } from './list.js'
 
 const template = (questions) => html`
 <section id="editor">
@@ -30,26 +30,11 @@ const template = (questions) => html`
         <h2>Questions</h2>
     </header>
 
-    ${questionList(questions)}
+    ${createList(questions)}
 </section>
 `;
 
-const questionList = (questions) => html`
-<div class="pad-large alt-page">
-    <!--  если ф-я принимает 2 параметра, то при МАП (если в функцию не подавать параметри) в кач-ве 2=-го параметра берется индекс(0,1,2)    а т.к. 2-й параметр ф-ии БУЛЕАН, то при 0 - false, 1- true-->
-    ${questions.map((q, i) => createQuestion(q, i + 1, false))}
 
-    <article class="editor-question">
-        <div class="editor-input">
-            <button class="input submit action">
-                <i class="fas fa-plus-circle"></i>
-                Add question
-            </button>
-        </div>
-    </article>
-
-</div>
-`;
 
 const questions = [
     {
@@ -62,10 +47,11 @@ const questions = [
         answers: ['n', 'maybe', 'y'],
         correctIndex: 1
     }
-]
+];
 
 export async function editorPage(ctx) {
-    ctx.render(template(questions))
+    ctx.render(template(questions));
+  
 }
 
 
